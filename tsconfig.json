@@ -1,0 +1,52 @@
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "resolvePackageJsonExports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2023",
+    "types": ["node", "jest"],
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@config/*": [
+        "./src/configs/*"
+      ],
+      "@modules/*": [
+        "./src/modules/*"
+      ],
+      "@interceptors/*": [
+        "./src/interceptors/*"
+      ],
+      "@repositories/*": [
+        "./src/repositories/*"
+      ],
+      "@entities/*": [
+        "./src/entities/*"
+      ],
+      "@commons/*": [
+        "./src/commons/*"
+      ],
+      "@exceptions/*": [
+        "./src/exceptions/*"
+      ],
+      "@middlewares/*": [
+        "./src/commons/middlewares/*"
+      ]
+    },
+    "incremental": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "strictPropertyInitialization": false
+  }
+}
