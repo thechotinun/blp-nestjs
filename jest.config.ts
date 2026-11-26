@@ -22,6 +22,12 @@ const config: Config = {
     'src/**/*.(t|j)s',
     'libs/**/*.(t|j)s',
     'apps/**/*.(t|j)s',
+    // Wiring only, no logic to unit test (covered by e2e instead)
+    '!**/*.module.ts',
+    '!src/main.ts',
+    '!src/app.setup.ts',
+    // Barrel files that only re-export
+    '!**/index.ts',
   ],
   coverageDirectory: './coverage',
   testEnvironment: 'node',
