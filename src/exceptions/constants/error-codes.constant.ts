@@ -10,5 +10,6 @@ export const ErrorCodes: { [key: number]: string } = {
   100103: 'TODO_CREATE_ERROR',
   100104: 'TODO_UPDATE_ERROR',
   100105: 'TODO_EXIST',
+  100106: 'TODO_FIND_ERROR',
   //
 };

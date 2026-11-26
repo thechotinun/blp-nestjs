@@ -64,6 +64,34 @@ describe('ApiResource', () => {
 		});
 	});
 
+	describe('successResponse with custom status', () => {
+		const created = { code: HttpStatus.CREATED, message: 'Created' };
+
+		it('uses the given status for a plain object', () => {
+			const todo = { id: '1' };
+
+			expect(ApiResource.successResponse(todo, HttpStatus.CREATED)).toEqual({
+				data: todo,
+				status: created,
+			});
+		});
+
+		it('uses the given status when there is no data', () => {
+			expect(ApiResource.successResponse(undefined, HttpStatus.CREATED)).toEqual({
+				status: created,
+			});
+		});
+
+		it('uses the given status for a pagination result', () => {
+			const result = ApiResource.successResponse(
+				{ items: [], meta: { itemCount: 0 } },
+				HttpStatus.CREATED,
+			);
+
+			expect(result.status).toEqual(created);
+		});
+	});
+
 	describe('errorResponse', () => {
 		it('rethrows the same error', () => {
 			const error = new Error('boom');

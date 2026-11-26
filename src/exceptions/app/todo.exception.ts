@@ -6,14 +6,21 @@ export class TodoException extends ApiException {
    * @returns ApiException
    */
   static notFound(): ApiException {
-    return new ApiException(100101, [], HttpStatus.OK);
+    return new ApiException(100101, [], HttpStatus.NOT_FOUND);
+  }
+
+  /**
+   * @returns ApiException
+   */
+  static findError(): ApiException {
+    return new ApiException(100106, [], HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
   /**
    * @returns ApiException
    */
   static exist(): ApiException {
-    return new ApiException(100105);
+    return new ApiException(100105, [], HttpStatus.CONFLICT);
   }
 
   /**

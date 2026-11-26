@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Delete,
+  HttpStatus,
 } from '@nestjs/common';
 import { PaginateQuery } from '@commons/dto/paginate.query';
 import { TodoService } from '@modules/todo/services/todo.service';
@@ -27,7 +28,7 @@ export class TodoController {
     try {
       const response = await this.todoService.create(payload);
 
-      return ApiResource.successResponse(response);
+      return ApiResource.successResponse(response, HttpStatus.CREATED);
     } catch (error) {
       return ApiResource.errorResponse(error);
     }

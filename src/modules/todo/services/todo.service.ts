@@ -1,18 +1,21 @@
 import { randomUUID } from 'node:crypto';
 import { Todo } from '@entities/todo.entity';
+import { ApiException } from '@exceptions/app/api.exception';
 import { TodoException } from '@exceptions/app/todo.exception';
 import { CreateTodoDto } from '@modules/todo/dto/create-todo.dto';
 import { UpdateTodoDto } from '@modules/todo/dto/update-todo.dto';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TodoRepository } from '@repositories/todo.repository';
 import { PaginateQuery } from '@commons/dto/paginate.query';
 import { paginate } from '@commons/helpers/paginate';
 import { Pagination } from '@commons/interfaces/pagination.interface';
-import { Like, UpdateResult } from 'typeorm';
+import { Like, QueryFailedError, UpdateResult } from 'typeorm';
 
 @Injectable()
 export class TodoService {
+  private readonly logger = new Logger(TodoService.name);
+
   constructor(
     @InjectRepository(TodoRepository)
     private readonly todoRepository: TodoRepository,
@@ -36,8 +39,14 @@ export class TodoService {
 
       return savedPost;
     } catch (error) {
-      throw TodoException.createError(
-        error instanceof Error ? [error.message] : [],
+      if (this.isUniqueViolation(error)) {
+        throw TodoException.exist();
+      }
+
+      this.rethrowOrWrap(
+        error,
+        'create failed',
+        TodoException.createError(),
       );
     }
   }
@@ -89,12 +98,16 @@ export class TodoService {
         .getOne();
 
       if (!todo) {
-        throw new Error('Todo not found');
+        throw TodoException.notFound();
       }
 
       return todo;
-    } catch {
-      throw TodoException.notFound();
+    } catch (error) {
+      this.rethrowOrWrap(
+        error,
+        `findOneById failed (id=${id})`,
+        TodoException.findError(),
+      );
     }
   }
 
@@ -105,7 +118,7 @@ export class TodoService {
         where: { id: id },
       });
       if (!todo) {
-        throw new Error('TODO_NOT_FOUND');
+        throw TodoException.notFound();
       }
 
       await this.todoRepository.update(id, {
@@ -114,8 +127,14 @@ export class TodoService {
 
       return await this.findOneById(id);
     } catch (error) {
-      throw TodoException.updateError(
-        error instanceof Error ? [error.message] : [],
+      if (this.isUniqueViolation(error)) {
+        throw TodoException.exist();
+      }
+
+      this.rethrowOrWrap(
+        error,
+        `update failed (id=${id})`,
+        TodoException.updateError(),
       );
     }
   }
@@ -126,17 +145,51 @@ export class TodoService {
         where: { id: id },
       });
       if (!todo) {
-        throw new Error('TODO_NOT_FOUND');
+        throw TodoException.notFound();
       }
 
       await this.findOneById(id);
 
       return await this.todoRepository.softDelete(id);
     } catch (error) {
-      throw TodoException.deleteError(
-        error instanceof Error ? [error.message] : [],
+      this.rethrowOrWrap(
+        error,
+        `remove failed (id=${id})`,
+        TodoException.deleteError(),
       );
     }
+  }
+
+  /**
+   * Postgres unique_violation (SQLSTATE 23505), e.g. duplicated todo name
+   */
+  private isUniqueViolation(error: unknown): boolean {
+    return (
+      error instanceof QueryFailedError &&
+      (error.driverError as { code?: string } | undefined)?.code === '23505'
+    );
+  }
+
+  /**
+   * Rethrows known ApiException as is. Anything else is unexpected: the real
+   * error (may contain DB internals) is only logged, and the client gets the
+   * given generic exception instead.
+   */
+  private rethrowOrWrap(
+    error: unknown,
+    context: string,
+    fallback: ApiException,
+  ): never {
+    if (error instanceof ApiException) {
+      throw error;
+    }
+
+    this.logger.error(
+      context,
+      error instanceof Error ? error.stack : String(error),
+    );
+
+    throw fallback;
   }
 
 }

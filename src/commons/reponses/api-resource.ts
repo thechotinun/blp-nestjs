@@ -1,4 +1,5 @@
 import { HttpStatus } from '@nestjs/common';
+import { HttpStatusMessages } from '@exceptions/constants/http-status-messages.constant';
 import {
   Pagination,
   PaginationLinks,
@@ -17,25 +18,29 @@ export class ApiResource {
   /**
    * Success response
    * @param [data]
+   * @param [statusCode] must match the HTTP status the route responds with
    * @returns SuccessResponseInterface
    */
-  static successResponse(data?: unknown): SuccessResponseInterface {
+  static successResponse(
+    data?: unknown,
+    statusCode: HttpStatus = HttpStatus.OK,
+  ): SuccessResponseInterface {
+    const status = {
+      code: statusCode,
+      message: HttpStatusMessages[statusCode],
+    };
+
     if (!data) {
-      return { status: { code: HttpStatus.OK, message: 'OK' } };
+      return { status };
     }
 
     if (isPagination(data)) {
       const { items, links, meta } = data;
 
-      return {
-        data: items,
-        links,
-        meta,
-        status: { code: HttpStatus.OK, message: 'OK' },
-      };
+      return { data: items, links, meta, status };
     }
 
-    return { data, status: { code: HttpStatus.OK, message: 'OK' } };
+    return { data, status };
   }
 
   /**
