@@ -1,21 +1,24 @@
-import { config } from 'dotenv';
-import { join } from 'path';
 import * as packageJson from '../../package.json';
 
 export default () => {
-	const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
-	config({ path: join(__dirname, '..', '..', envFile) });
+	// Fail fast: without a test database name the driver falls back to its default
+	// database, and DATABASE_SYNC could then change a database that is not for tests.
+	if (process.env.NODE_ENV === 'test' && !process.env.DATABASE_NAME_TEST) {
+		throw new Error(
+			'DATABASE_NAME_TEST is not set. Define it in .env.test.local (see .env.test.example).',
+		);
+	}
 
 	return {
 		name: packageJson.name,
 		version: packageJson.version,
 		APP_URL: process.env.APP_URL || 'http://localhost:3000',
 		mode: process.env.NODE_ENV,
-		port: parseInt(process.env.PORT || '3000'),
+		port: parseInt(process.env.PORT || '3000', 10),
 		database: {
 			type: process.env.DATABASE_TYPE,
 			host: process.env.DATABASE_HOST,
-			port: parseInt(process.env.DATABASE_PORT || '5432'),
+			port: parseInt(process.env.DATABASE_PORT || '5432', 10),
 			name:
 				process.env.NODE_ENV === 'test'
 					? process.env.DATABASE_NAME_TEST
@@ -34,6 +37,6 @@ export default () => {
 				expire: process.env.JWT_REFRESH_EXPIRE || '1h',
 			},
 		},
-		PER_PAGE: process.env.PER_PAGE || 30,
+		PER_PAGE: parseInt(process.env.PER_PAGE || '30', 10),
 	};
 };

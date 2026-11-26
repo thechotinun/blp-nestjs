@@ -1,9 +1,5 @@
-import { join } from 'path';
-import { config } from 'dotenv';
 import configuration from './configuration';
 import * as packageJson from '../../package.json';
-
-jest.mock('dotenv', () => ({ config: jest.fn() }));
 
 const ENV_KEYS = [
 	'NODE_ENV',
@@ -26,7 +22,6 @@ const ENV_KEYS = [
 
 describe('configuration', () => {
 	const originalEnv: Record<string, string | undefined> = {};
-	const mockedConfig = jest.mocked(config);
 
 	beforeAll(() => {
 		ENV_KEYS.forEach((key) => {
@@ -35,7 +30,6 @@ describe('configuration', () => {
 	});
 
 	beforeEach(() => {
-		mockedConfig.mockClear();
 		ENV_KEYS.forEach((key) => {
 			delete process.env[key];
 		});
@@ -48,37 +42,6 @@ describe('configuration', () => {
 			} else {
 				process.env[key] = originalEnv[key];
 			}
-		});
-	});
-
-	describe('env file loading', () => {
-		it('should load .env when NODE_ENV is not test', () => {
-			process.env.NODE_ENV = 'development';
-
-			configuration();
-
-			expect(mockedConfig).toHaveBeenCalledTimes(1);
-			expect(mockedConfig).toHaveBeenCalledWith({
-				path: join(__dirname, '..', '..', '.env'),
-			});
-		});
-
-		it('should load .env when NODE_ENV is undefined', () => {
-			configuration();
-
-			expect(mockedConfig).toHaveBeenCalledWith({
-				path: join(__dirname, '..', '..', '.env'),
-			});
-		});
-
-		it('should load .env.test when NODE_ENV is test', () => {
-			process.env.NODE_ENV = 'test';
-
-			configuration();
-
-			expect(mockedConfig).toHaveBeenCalledWith({
-				path: join(__dirname, '..', '..', '.env.test'),
-			});
 		});
 	});
 
@@ -190,10 +153,10 @@ describe('configuration', () => {
 			});
 		});
 
-		it('should return PER_PAGE from env as raw string', () => {
+		it('should parse PER_PAGE as number', () => {
 			process.env.PER_PAGE = '50';
 
-			expect(configuration().PER_PAGE).toBe('50');
+			expect(configuration().PER_PAGE).toBe(50);
 		});
 	});
 
@@ -213,6 +176,27 @@ describe('configuration', () => {
 			process.env.NODE_ENV = 'test';
 
 			expect(configuration().database.name).toBe('blp_test');
+		});
+
+		it('should throw when NODE_ENV is test and DATABASE_NAME_TEST is missing', () => {
+			process.env.NODE_ENV = 'test';
+			delete process.env.DATABASE_NAME_TEST;
+
+			expect(() => configuration()).toThrow(/DATABASE_NAME_TEST is not set/);
+		});
+
+		it('should throw when NODE_ENV is test and DATABASE_NAME_TEST is empty', () => {
+			process.env.NODE_ENV = 'test';
+			process.env.DATABASE_NAME_TEST = '';
+
+			expect(() => configuration()).toThrow(/DATABASE_NAME_TEST is not set/);
+		});
+
+		it('should not need DATABASE_NAME_TEST outside test mode', () => {
+			process.env.NODE_ENV = 'development';
+			delete process.env.DATABASE_NAME_TEST;
+
+			expect(() => configuration()).not.toThrow();
 		});
 	});
 

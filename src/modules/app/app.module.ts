@@ -13,7 +13,7 @@ import { TodoModule } from '@modules/todo/todo.module';
 @Module({
 	imports: [
 		ConfigModule.forRoot({
-			envFilePath: '.env',
+			envFilePath: process.env.NODE_ENV === 'test' ? ['.env.test.local', '.env.test'] : '.env',
 			load: [configuration],
 			isGlobal: true,
 		}),
