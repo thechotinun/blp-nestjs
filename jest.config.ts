@@ -26,6 +26,9 @@ const config: Config = {
     '!**/*.module.ts',
     '!src/main.ts',
     '!src/app.setup.ts',
+    // TypeORM CLI entry point and generated SQL, run by the migration scripts
+    '!src/configs/typeorm/data-source.ts',
+    '!src/migrations/**',
     // Barrel files that only re-export
     '!**/index.ts',
   ],
