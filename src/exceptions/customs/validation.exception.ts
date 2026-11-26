@@ -2,63 +2,55 @@ import { HttpException, ValidationError } from '@nestjs/common';
 import { map } from 'lodash';
 
 export class ValidationException extends HttpException {
-  constructor(errors: ValidationError[], status: number) {
-    super(errors, status);
-  }
+	constructor(errors: ValidationError[], status: number) {
+		super(errors, status);
+	}
 }
 
 export class FlattenValidationErrors {
-  constructor(private validationErrors: ValidationError[]) {}
+	constructor(private validationErrors: ValidationError[]) {}
 
-  messages(): string[] {
-    return map(this.validationErrors, (error: ValidationError) =>
-      this.mapChildrenToValidationErrors(error),
-    )
-      .flat()
-      .flatMap((item) =>
-        item.constraints ? Object.values(item.constraints) : [],
-      );
-  }
+	messages(): string[] {
+		return map(this.validationErrors, (error: ValidationError) =>
+			this.mapChildrenToValidationErrors(error),
+		)
+			.flat()
+			.flatMap((item) => (item.constraints ? Object.values(item.constraints) : []));
+	}
 
-  private mapChildrenToValidationErrors(
-    error: ValidationError,
-    parentPath?: string,
-  ): ValidationError[] {
-    if (!(error.children && error.children.length)) {
-      return [error];
-    }
+	private mapChildrenToValidationErrors(
+		error: ValidationError,
+		parentPath?: string,
+	): ValidationError[] {
+		if (!(error.children && error.children.length)) {
+			return [error];
+		}
 
-    const validationErrors = [];
+		const validationErrors = [];
 
-    parentPath = parentPath
-      ? `${parentPath}.${error.property}`
-      : error.property;
+		parentPath = parentPath ? `${parentPath}.${error.property}` : error.property;
 
-    for (const item of error.children) {
-      if (item.children && item.children.length) {
-        validationErrors.push(
-          ...this.mapChildrenToValidationErrors(item, parentPath),
-        );
-      }
+		for (const item of error.children) {
+			if (item.children && item.children.length) {
+				validationErrors.push(...this.mapChildrenToValidationErrors(item, parentPath));
+			}
 
-      validationErrors.push(
-        this.prependConstraintsWithParentProp(parentPath, item),
-      );
-    }
+			validationErrors.push(this.prependConstraintsWithParentProp(parentPath, item));
+		}
 
-    return validationErrors;
-  }
+		return validationErrors;
+	}
 
-  private prependConstraintsWithParentProp(
-    parentPath: string,
-    error: ValidationError,
-  ): ValidationError {
-    const constraints: Record<string, string> = {};
+	private prependConstraintsWithParentProp(
+		parentPath: string,
+		error: ValidationError,
+	): ValidationError {
+		const constraints: Record<string, string> = {};
 
-    for (const key in error.constraints) {
-      constraints[key] = `${parentPath}.${error.constraints[key]}`;
-    }
+		for (const key in error.constraints) {
+			constraints[key] = `${parentPath}.${error.constraints[key]}`;
+		}
 
-    return Object.assign(Object.assign({}, error), { constraints });
-  }
+		return Object.assign(Object.assign({}, error), { constraints });
+	}
 }

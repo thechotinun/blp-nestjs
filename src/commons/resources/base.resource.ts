@@ -1,21 +1,21 @@
 import { Expose } from 'class-transformer';
 
 export class BaseResourceDto {
-  @Expose()
-  id: number;
+	@Expose()
+	id: number;
 
-  @Expose()
-  isActive: boolean;
+	@Expose()
+	isActive: boolean;
 
-  @Expose()
-  createdDate: Date;
+	@Expose()
+	createdDate: Date;
 
-  @Expose()
-  createdBy: number;
+	@Expose()
+	createdBy: number;
 
-  @Expose()
-  updatedDate: Date;
+	@Expose()
+	updatedDate: Date;
 
-  @Expose()
-  updatedBy: number;
+	@Expose()
+	updatedBy: number;
 }

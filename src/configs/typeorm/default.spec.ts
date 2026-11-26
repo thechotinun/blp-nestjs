@@ -1,12 +1,6 @@
 import type { ConfigService } from '@nestjs/config';
 import TypeOrmConfigService from './default';
 
-// @nestjs/* v12 is ESM-only and jest runs CommonJS, so the real packages
-// cannot be loaded here. Only the decorator/DI wiring is replaced; the
-// service logic under test is untouched.
-jest.mock('@nestjs/common', () => ({ Injectable: () => () => undefined }));
-jest.mock('@nestjs/config', () => ({ ConfigService: class {} }));
-
 type ConfigValues = Record<string, unknown>;
 
 const configServiceFactory = (values: ConfigValues): ConfigService =>
